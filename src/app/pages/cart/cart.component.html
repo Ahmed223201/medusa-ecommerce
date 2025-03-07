@@ -1,0 +1,12 @@
+<div class="container">
+    <h2>Your Cart</h2>
+    <ul class="list-group">
+      <li *ngFor="let item of cart" class="list-group-item">
+        <h5>{{ item.name }} - ${{ item.price }}</h5>
+        <button class="btn btn-danger btn-sm" (click)="removeFromCart(item)">Remove</button>
+      </li>
+    </ul>
+    <h3>Total: ${{ totalPrice }}</h3>
+    <button class="btn btn-primary">Checkout</button>
+  </div>
+  

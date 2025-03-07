@@ -1,1 +1,46 @@
-/* You can add global styles to this file, and also import other style files */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Distributes space evenly */
+    background-color: blue;
+    padding: 10px 20px;
+    color: white;
+  }
+  
+  .logo {
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .search-bar {
+    flex-grow: 1; /* Makes it take available space */
+    margin: 0 20px;
+    max-width: 400px;
+  }
+  
+  .cart {
+    white-space: nowrap;
+  }
+  
+  .navbar {
+    display: flex;
+    justify-content: center; /* Centers nav links */
+    gap: 20px;
+    background-color: lightgray;
+    padding: 10px;
+  }
+  
+  .navbar a {
+    text-decoration: none;
+    color: black;
+    font-weight: bold;
+  }
+  
+  .products {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center; /* Centers product cards */
+    gap: 20px;
+    padding: 20px;
+  }
+  
