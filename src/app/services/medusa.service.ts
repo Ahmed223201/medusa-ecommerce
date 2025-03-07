@@ -6,7 +6,7 @@ import { environment } from '../../environments/environment';
   providedIn: 'root'
 })
 export class MedusaService {
-  private apiUrl = environment.MEDUSA_API_URL;
+  private apiUrl = environment.medusaApi;
 
   constructor(private http: HttpClient) {}
 

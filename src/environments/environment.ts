@@ -1,4 +1,4 @@
 export const environment = {
   production: false,
-  MEDUSA_API_URL: 'http://localhost:9000',
+  medusaApi: 'http://localhost:9000',
 };
