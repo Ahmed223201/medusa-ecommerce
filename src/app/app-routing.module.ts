@@ -1,15 +1,16 @@
-
-import { Routes,provideRouter } from '@angular/router';
+import { Routes, provideRouter } from '@angular/router';
 import { HomeComponent } from './pages/home/home.component';
 import { ProductsComponent } from './pages/products/products.component';
 import { ProductDetailsComponent } from './pages/product-details/product-details.component';
 import { CartComponent } from './pages/cart/cart.component';
+import { LoginComponent } from './pages/login/login.component'; 
 
 export const routes: Routes = [
-  { path: 'home', component: HomeComponent },  
+  { path: 'home', component: HomeComponent },
   { path: 'products', component: ProductsComponent },
-  { path: 'products/:id', component: ProductDetailsComponent }, // ✅ Correct dynamic route
+  { path: 'products/:id', component: ProductDetailsComponent },
   { path: 'cart', component: CartComponent },
-  { path: '', component: HomeComponent }, 
+  { path: 'login', component: LoginComponent }, 
+  { path: '', redirectTo: 'home', pathMatch: 'full' },
+  { path: '**', redirectTo: 'home' }
 ];
-export const appRouting = provideRouter(routes);

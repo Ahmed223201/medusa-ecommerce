@@ -1,172 +1,232 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MedusaService } from '../../services/medusa.service';
+import { ProductService, Product } from '../../services/product.service';
+import { CartService } from '../../services/cart.service';
 
 @Component({
   selector: 'app-products',
   standalone: true,
   imports: [CommonModule],
-  template: `
-    <div class="products-container">
-      <ng-container *ngIf="loading; else errorTemplate">
-        <div class="loading">Loading products...</div>
-      </ng-container>
-      <ng-template #errorTemplate>
-        <ng-container *ngIf="error; else productsTemplate">
-          <div class="error">{{ error }}</div>
-        </ng-container>
-        <ng-template #productsTemplate>
-          <div *ngFor="let product of products; trackBy: trackProductById">
-            <div class="product-card">
-              <img *ngIf="product.thumbnail" [src]="product.thumbnail" [alt]="product.title" class="product-image">
-              <div class="product-info">
-                <h2>{{ product.title }}</h2>
-                <p class="description">{{ product.description }}</p>
-                <div *ngIf="product.variants && product.variants[0]?.prices && product.variants[0]?.prices[0]" class="price">
-                  {{ (product.variants[0].prices[0].amount / 100) | currency }}
-                </div>
-                <button 
-                  (click)="addToCart(product.variants[0].id)"
-                  [disabled]="!product.variants?.[0]?.id"
-                  class="add-to-cart">
-                  Add to Cart
-                </button>
-              </div>
-            </div>
-          </div>
-        </ng-template>
-      </ng-template>
-    </div>
-  `,
+  template: '<div class="products-container">' +
+    '<div class="products-grid">' +
+      '<div *ngFor="let product of products" class="product-card">' +
+        '<div class="product-image">' +
+          '<img [src]="product.image" [alt]="product.title">' +
+          '<div class="product-badge" *ngIf="product.onSale">SALE</div>' +
+        '</div>' +
+        '<div class="product-info">' +
+          '<h3>{{ product.title }}</h3>' +
+          '<p class="description">{{ product.description }}</p>' +
+          '<div class="price-rating">' +
+            '<div class="price">' +
+              '<span class="current-price" [class.sale]="product.onSale">' +
+                '$' + '{{ product.onSale ? product.salePrice : product.price }}' +
+              '</span>' +
+              '<span class="original-price" *ngIf="product.onSale">' +
+                '$' + '{{ product.price }}' +
+              '</span>' +
+            '</div>' +
+            '<div class="rating">' +
+              '<i class="fas fa-star"></i>' +
+              '{{ product.rating }}' +
+            '</div>' +
+          '</div>' +
+          '<div class="stock-info" [class.low-stock]="product.stock <= 5">' +
+            '{{ product.stock === 0 ? "Out of Stock" : product.stock + " in stock" }}' +
+          '</div>' +
+          '<button ' +
+            'class="add-to-cart" ' +
+            '(click)="addToCart(product)"' +
+            '[disabled]="product.stock === 0">' +
+            '<i class="fas fa-shopping-cart"></i>' +
+            '{{ product.stock === 0 ? "Out of Stock" : "Add to Cart" }}' +
+          '</button>' +
+        '</div>' +
+      '</div>' +
+    '</div>' +
+  '</div>',
   styles: [`
     .products-container {
+      padding: 1rem;
+    }
+
+    .products-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-      gap: 24px;
-      padding: 20px;
+      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+      gap: 2rem;
+      max-width: 1200px;
+      margin: 0 auto;
     }
+
     .product-card {
-      border: 1px solid #e0e0e0;
-      padding: 0;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      transition: transform 0.2s, box-shadow 0.2s;
       background: white;
+      border-radius: var(--border-radius);
+      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+      overflow: hidden;
+      transition: transform 0.2s, box-shadow 0.2s;
     }
+
     .product-card:hover {
-      transform: translateY(-4px);
+      transform: translateY(-5px);
       box-shadow: 0 4px 8px rgba(0,0,0,0.15);
     }
+
     .product-image {
+      position: relative;
+      aspect-ratio: 4/3;
+      overflow: hidden;
+    }
+
+    .product-image img {
       width: 100%;
-      height: 200px;
+      height: 100%;
       object-fit: cover;
-      border-bottom: 1px solid #e0e0e0;
+      transition: transform 0.3s;
     }
+
+    .product-card:hover .product-image img {
+      transform: scale(1.05);
+    }
+
+    .product-badge {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: var(--error-color);
+      color: white;
+      padding: 0.25rem 0.75rem;
+      border-radius: var(--border-radius);
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+
     .product-info {
-      padding: 16px;
+      padding: 1.5rem;
     }
-    h2 {
-      margin: 0 0 8px 0;
-      font-size: 1.2rem;
-      color: #333;
+
+    .product-info h3 {
+      font-size: 1.25rem;
+      color: var(--text-color);
+      margin-bottom: 0.5rem;
     }
+
     .description {
-      color: #666;
-      font-size: 0.9rem;
-      margin-bottom: 16px;
+      color: var(--text-light);
+      font-size: 0.875rem;
+      margin-bottom: 1rem;
       display: -webkit-box;
       -webkit-line-clamp: 2;
       -webkit-box-orient: vertical;
       overflow: hidden;
     }
-    .price {
-      font-size: 1.25rem;
-      font-weight: bold;
-      color: #2e7d32;
-      margin-bottom: 16px;
+
+    .price-rating {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
     }
+
+    .price {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .current-price {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-color);
+    }
+
+    .current-price.sale {
+      color: var(--error-color);
+    }
+
+    .original-price {
+      font-size: 1rem;
+      color: var(--text-light);
+      text-decoration: line-through;
+    }
+
+    .rating {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      color: var(--text-color);
+      font-weight: 500;
+    }
+
+    .rating i {
+      color: #fbbf24;
+    }
+
+    .stock-info {
+      font-size: 0.875rem;
+      color: var(--text-light);
+      margin-bottom: 1rem;
+    }
+
+    .stock-info.low-stock {
+      color: var(--error-color);
+    }
+
     .add-to-cart {
       width: 100%;
-      background-color: #4CAF50;
+      padding: 0.75rem;
+      background: var(--primary-color);
       color: white;
-      padding: 12px;
       border: none;
-      border-radius: 4px;
-      cursor: pointer;
+      border-radius: var(--border-radius);
       font-weight: 500;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      cursor: pointer;
       transition: background-color 0.2s;
     }
+
     .add-to-cart:hover:not(:disabled) {
-      background-color: #45a049;
+      background: var(--primary-hover);
     }
+
     .add-to-cart:disabled {
-      background-color: #cccccc;
+      background: var(--border-color);
       cursor: not-allowed;
     }
-    .loading {
-      text-align: center;
-      padding: 2rem;
-      font-size: 1.2rem;
-      color: #666;
-      grid-column: 1 / -1;
-    }
-    .error {
-      text-align: center;
-      padding: 2rem;
-      color: #dc3545;
-      grid-column: 1 / -1;
+
+    @media (max-width: 768px) {
+      .products-grid {
+        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+        gap: 1rem;
+      }
+
+      .product-info {
+        padding: 1rem;
+      }
     }
   `]
 })
 export class ProductsComponent implements OnInit {
-  products: any[] = [];
-  cartId: string = '';
-  loading: boolean = true;
-  error: string = '';
+  products: Product[] = [];
 
-  constructor(private medusaService: MedusaService) {}
+  constructor(
+    private productService: ProductService,
+    private cartService: CartService
+  ) {}
 
-  ngOnInit() {
-    this.medusaService.createCart().subscribe({
-      next: (cart: any) => {
-        this.cartId = cart.cart.id;
-      },
-      error: (err) => {
-        console.error('Error creating cart:', err);
-      }
-    });
-
-    this.medusaService.getProducts().subscribe({
-      next: (response: any) => {
-        this.products = response.products;
-        this.loading = false;
-      },
-      error: (err) => {
-        this.error = 'Failed to load products. Please try again later.';
-        this.loading = false;
-        console.error('Error loading products:', err);
-      }
-    });
+  async ngOnInit() {
+    this.products = await this.productService.getProducts();
   }
 
-  trackProductById(index: number, product: any) {
-    return product.id;
-  }
-
-  addToCart(variantId: string) {
-    if (!this.cartId || !variantId) return;
-    
-    this.medusaService.addToCart(this.cartId, variantId, 1).subscribe({
-      next: (response) => {
-        console.log('Added to cart', response);
-        // You could show a success message here
-      },
-      error: (err) => {
-        console.error('Error adding to cart:', err);
-        // You could show an error message here
-      }
+  addToCart(product: Product) {
+    const price = product.onSale && product.salePrice ? product.salePrice : product.price;
+    this.cartService.addItem({
+      id: product.id,
+      title: product.title,
+      price: price,
+      image: product.image
     });
   }
 }

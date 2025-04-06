@@ -1,40 +1,35 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { environment } from '../../environments/environment';
-import { BehaviorSubject, Observable, tap } from 'rxjs';
+import { Router } from '@angular/router';
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
-  isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
+  private isAuthenticated = false;
 
-  constructor(private http: HttpClient) {}
+  constructor(private router: Router) {
+    // Check if user was previously logged in
+    this.isAuthenticated = localStorage.getItem('isLoggedIn') === 'true';
+  }
 
-  login(email: string, password: string): Observable<any> {
-    return this.http.post(`${environment.medusaApi}/store/auth`, {
-      email,
-      password
-    }).pipe(
-      tap((response: any) => {
-        if (response.customer) {
-          this.isAuthenticatedSubject.next(true);
-          localStorage.setItem('currentUser', JSON.stringify(response.customer));
-        }
-      })
-    );
+  login(username: string, password: string): boolean {
+    // For demo purposes, accept any non-empty credentials
+    if (username && password) {
+      this.isAuthenticated = true;
+      localStorage.setItem('isLoggedIn', 'true');
+      this.router.navigate(['/admin']);
+      return true;
+    }
+    return false;
   }
 
   logout(): void {
-    this.http.delete(`${environment.medusaApi}/store/auth`).subscribe(() => {
-      this.isAuthenticatedSubject.next(false);
-      localStorage.removeItem('currentUser');
-    });
+    this.isAuthenticated = false;
+    localStorage.removeItem('isLoggedIn');
+    this.router.navigate(['/']);
   }
 
-  checkAuthStatus(): void {
-    const user = localStorage.getItem('currentUser');
-    this.isAuthenticatedSubject.next(!!user);
+  isLoggedIn(): boolean {
+    return this.isAuthenticated;
   }
 }
