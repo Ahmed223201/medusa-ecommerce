@@ -1,276 +1,127 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ProductService, Product } from '../../services/product.service';
+import { FormsModule } from '@angular/forms';
 import { AuthService } from '../../services/auth.service';
+import { ProductService, Product } from '../../services/product.service';
+import { NotificationService } from '../../services/notification.service';
 
 @Component({
   selector: 'app-admin',
   standalone: true,
-  imports: [CommonModule],
-  template: '<div class="admin-container">' +
-    '<div class="admin-header">' +
-      '<h2>Admin Dashboard</h2>' +
-      '<button class="logout-btn" (click)="logout()">' +
-        '<i class="fas fa-sign-out-alt"></i>' +
-        'Logout' +
-      '</button>' +
-    '</div>' +
-    '<div class="admin-content">' +
-      '<div class="stats-grid">' +
-        '<div class="stat-card">' +
-          '<h3>Total Products</h3>' +
-          '<p class="stat-value">{{ products.length }}</p>' +
-        '</div>' +
-        '<div class="stat-card">' +
-          '<h3>Products on Sale</h3>' +
-          '<p class="stat-value">{{ productsOnSale }}</p>' +
-        '</div>' +
-        '<div class="stat-card">' +
-          '<h3>Low Stock Items</h3>' +
-          '<p class="stat-value">{{ lowStockProducts }}</p>' +
-        '</div>' +
-      '</div>' +
-      '<div class="product-list">' +
-        '<h3>Product Management</h3>' +
-        '<div class="table-container">' +
-          '<table>' +
-            '<thead>' +
-              '<tr>' +
-                '<th>Product</th>' +
-                '<th>Price</th>' +
-                '<th>Stock</th>' +
-                '<th>Status</th>' +
-              '</tr>' +
-            '</thead>' +
-            '<tbody>' +
-              '<tr *ngFor="let product of products">' +
-                '<td>' +
-                  '<div class="product-cell">' +
-                    '<img [src]="product.image" [alt]="product.title">' +
-                    '<div>' +
-                      '<p class="product-title">{{ product.title }}</p>' +
-                      '<p class="product-category">{{ product.category }}</p>' +
-                    '</div>' +
-                  '</div>' +
-                '</td>' +
-                '<td>' +
-                  '<div class="price-cell">' +
-                    '<p class="current-price">${{ product.onSale ? product.salePrice : product.price }}</p>' +
-                    '<p class="original-price" *ngIf="product.onSale">${{ product.price }}</p>' +
-                  '</div>' +
-                '</td>' +
-                '<td>' +
-                  '<span [class.low-stock]="product.stock <= 5">' +
-                    '{{ product.stock }}' +
-                  '</span>' +
-                '</td>' +
-                '<td>' +
-                  '<span class="status" [class.on-sale]="product.onSale">' +
-                    '{{ product.onSale ? "On Sale" : "Regular Price" }}' +
-                  '</span>' +
-                '</td>' +
-              '</tr>' +
-            '</tbody>' +
-          '</table>' +
-        '</div>' +
-      '</div>' +
-    '</div>' +
-  '</div>',
-  styles: [`
-    .admin-container {
-      padding: 2rem;
-    }
-
-    .admin-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 2rem;
-    }
-
-    .admin-header h2 {
-      margin: 0;
-      color: var(--text-color);
-    }
-
-    .logout-btn {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 1rem;
-      background: var(--error-color);
-      color: white;
-      border: none;
-      border-radius: var(--border-radius);
-      cursor: pointer;
-      transition: background-color 0.2s;
-    }
-
-    .logout-btn:hover {
-      background: #e53e3e;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .stat-card {
-      background: white;
-      padding: 1.5rem;
-      border-radius: var(--border-radius);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .stat-card h3 {
-      margin: 0 0 0.5rem;
-      color: var(--text-light);
-      font-size: 1rem;
-    }
-
-    .stat-value {
-      margin: 0;
-      font-size: 2rem;
-      font-weight: 600;
-      color: var(--text-color);
-    }
-
-    .product-list {
-      background: white;
-      padding: 1.5rem;
-      border-radius: var(--border-radius);
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-
-    .product-list h3 {
-      margin: 0 0 1.5rem;
-      color: var(--text-color);
-    }
-
-    .table-container {
-      overflow-x: auto;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    th {
-      text-align: left;
-      padding: 1rem;
-      color: var(--text-light);
-      font-weight: 500;
-      border-bottom: 2px solid var(--border-color);
-    }
-
-    td {
-      padding: 1rem;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .product-cell {
-      display: flex;
-      align-items: center;
-      gap: 1rem;
-    }
-
-    .product-cell img {
-      width: 48px;
-      height: 48px;
-      object-fit: cover;
-      border-radius: var(--border-radius);
-    }
-
-    .product-title {
-      margin: 0;
-      color: var(--text-color);
-      font-weight: 500;
-    }
-
-    .product-category {
-      margin: 0;
-      color: var(--text-light);
-      font-size: 0.875rem;
-    }
-
-    .price-cell {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .current-price {
-      margin: 0;
-      color: var(--text-color);
-      font-weight: 500;
-    }
-
-    .original-price {
-      margin: 0;
-      color: var(--text-light);
-      text-decoration: line-through;
-      font-size: 0.875rem;
-    }
-
-    .low-stock {
-      color: var(--error-color);
-      font-weight: 500;
-    }
-
-    .status {
-      display: inline-block;
-      padding: 0.25rem 0.5rem;
-      border-radius: var(--border-radius);
-      font-size: 0.875rem;
-      background: var(--background-color);
-      color: var(--text-color);
-    }
-
-    .status.on-sale {
-      background: var(--error-color);
-      color: white;
-    }
-
-    @media (max-width: 768px) {
-      .admin-container {
-        padding: 1rem;
-      }
-
-      .stats-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .product-cell {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-      }
-    }
-  `]
+  imports: [CommonModule, FormsModule],
+  templateUrl: './admin.component.html',
+  styleUrls: ['./admin.component.css']
 })
 export class AdminComponent implements OnInit {
   products: Product[] = [];
-  productsOnSale = 0;
-  lowStockProducts = 0;
+  loading = true;
+  editMode = false;
+  currentProduct: Partial<Product> = this.getEmptyProduct();
 
   constructor(
+    private authService: AuthService,
     private productService: ProductService,
-    private authService: AuthService
+    private notificationService: NotificationService
   ) {}
 
-  async ngOnInit() {
-    this.products = await this.productService.getProducts();
-    this.updateStats();
+  ngOnInit(): void {
+    this.loadProducts();
   }
 
-  private updateStats() {
-    this.productsOnSale = this.products.filter(p => p.onSale).length;
-    this.lowStockProducts = this.products.filter(p => p.stock <= 5).length;
+  async loadProducts(): Promise<void> {
+    this.loading = true;
+    try {
+      // Force refresh from the service
+      this.products = await this.productService.getProducts(true);
+      console.log('Loaded products:', this.products);
+    } catch (error) {
+      this.notificationService.show('Failed to load products', 'error');
+      console.error('Error loading products:', error);
+    } finally {
+      this.loading = false;
+    }
   }
 
-  logout() {
+  editProduct(product: Product): void {
+    this.editMode = true;
+    this.currentProduct = { ...product };
+  }
+
+  cancelEdit(): void {
+    this.editMode = false;
+    this.currentProduct = this.getEmptyProduct();
+  }
+
+  async saveProduct(): Promise<void> {
+    try {
+      if (!this.currentProduct.title || !this.currentProduct.image) {
+        this.notificationService.show('Please fill in all required fields', 'error');
+        return;
+      }
+
+      if (this.editMode && this.currentProduct.id) {
+        // Update existing product
+        const success = await this.productService.updateProduct(
+          this.currentProduct.id,
+          this.currentProduct
+        );
+        
+        if (success) {
+          this.notificationService.show('Product updated successfully', 'success');
+          await this.loadProducts();
+        } else {
+          this.notificationService.show('Failed to update product', 'error');
+        }
+      } else {
+        // Add new product
+        const id = await this.productService.addProduct(this.currentProduct as Omit<Product, 'id'>);
+        
+        if (id) {
+          this.notificationService.show('Product added successfully', 'success');
+          await this.loadProducts();
+        } else {
+          this.notificationService.show('Failed to add product', 'error');
+        }
+      }
+      
+      this.editMode = false;
+      this.currentProduct = this.getEmptyProduct();
+    } catch (error) {
+      this.notificationService.show('An error occurred', 'error');
+      console.error('Error saving product:', error);
+    }
+  }
+
+  async deleteProduct(id: string): Promise<void> {
+    if (confirm('Are you sure you want to delete this product?')) {
+      try {
+        const success = await this.productService.deleteProduct(id);
+        
+        if (success) {
+          this.notificationService.show('Product deleted successfully', 'success');
+          await this.loadProducts();
+        } else {
+          this.notificationService.show('Failed to delete product', 'error');
+        }
+      } catch (error) {
+        this.notificationService.show('An error occurred', 'error');
+        console.error('Error deleting product:', error);
+      }
+    }
+  }
+
+  getEmptyProduct(): Partial<Product> {
+    return {
+      title: '',
+      description: '',
+      price: 0,
+      category: '',
+      image: '',
+      stock: 0
+    };
+  }
+
+  logout(): void {
     this.authService.logout();
   }
 }

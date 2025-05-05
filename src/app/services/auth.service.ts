@@ -1,35 +1,86 @@
 import { Injectable } from '@angular/core';
 import { Router } from '@angular/router';
+import { BehaviorSubject, map } from 'rxjs';
+import { HttpClient } from '@angular/common/http';
+import { NotificationService } from './notification.service';
+
+export interface User {
+  id: string;
+  email: string;
+  isAdmin: boolean;
+}
 
 @Injectable({
   providedIn: 'root'
 })
 export class AuthService {
-  private isAuthenticated = false;
+  private isAuthenticatedSubject = new BehaviorSubject<boolean>(false);
+  private currentUserSubject = new BehaviorSubject<User | null>(null);
 
-  constructor(private router: Router) {
-    // Check if user was previously logged in
-    this.isAuthenticated = localStorage.getItem('isLoggedIn') === 'true';
+  isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
+  currentUser$ = this.currentUserSubject.asObservable();
+  isAdmin$ = this.currentUser$.pipe(
+    map(user => user?.isAdmin === true)
+  );
+
+  constructor(
+    private router: Router,
+    private http: HttpClient,
+    private notificationService: NotificationService
+  ) {
+    this.checkExistingSession();
   }
 
-  login(username: string, password: string): boolean {
-    // For demo purposes, accept any non-empty credentials
-    if (username && password) {
-      this.isAuthenticated = true;
-      localStorage.setItem('isLoggedIn', 'true');
-      this.router.navigate(['/admin']);
-      return true;
+  private checkExistingSession() {
+    const isAdmin = localStorage.getItem('is_admin');
+    
+    if (isAdmin === 'true') {
+      this.setAdminSession();
     }
-    return false;
   }
 
-  logout(): void {
-    this.isAuthenticated = false;
-    localStorage.removeItem('isLoggedIn');
-    this.router.navigate(['/']);
+  private clearSession() {
+    localStorage.removeItem('is_admin');
+    this.isAuthenticatedSubject.next(false);
+    this.currentUserSubject.next(null);
   }
 
-  isLoggedIn(): boolean {
-    return this.isAuthenticated;
+  private setAdminSession() {
+    const adminUser: User = {
+      id: 'admin',
+      email: 'admin',
+      isAdmin: true
+    };
+    this.currentUserSubject.next(adminUser);
+    this.isAuthenticatedSubject.next(true);
+    localStorage.setItem('is_admin', 'true');
+  }
+
+  async login(email: string, password: string): Promise<boolean> {
+    try {
+      // Only allow admin login with hardcoded credentials
+      if (email === 'admin' && password === 'admin') {
+        this.setAdminSession();
+        this.notificationService.show('Welcome, Administrator!', 'success');
+        this.router.navigate(['/admin']);
+        return true;
+      }
+      this.notificationService.show('Invalid administrator credentials', 'error');
+      return false;
+    } catch (error) {
+      this.notificationService.show('Login failed', 'error');
+      return false;
+    }
+  }
+
+  async logout() {
+    this.clearSession();
+    this.notificationService.show('Successfully logged out', 'success');
+    this.router.navigate(['/administrator']);
+  }
+
+  isAdmin(): boolean {
+    const user = this.currentUserSubject.value;
+    return user?.isAdmin === true;
   }
 }

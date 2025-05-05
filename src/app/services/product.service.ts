@@ -1,6 +1,31 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { firstValueFrom } from 'rxjs';
+import { FirebaseService } from './firebase.service';
+import { environment } from '../../environments/environment';
+
+export interface MedusaProduct {
+  id: string;
+  title: string;
+  description: string;
+  handle: string;
+  thumbnail: string;
+  variants: Array<{
+    id: string;
+    title: string;
+    prices: Array<{
+      amount: number;
+      currency_code: string;
+    }>;
+    inventory_quantity: number;
+  }>;
+  collection_id: string | null;
+  collection: any;
+  categories: Array<{
+    id: string;
+    name: string;
+  }>;
+}
 
 export interface Product {
   id: string;
@@ -11,7 +36,6 @@ export interface Product {
   onSale?: boolean;
   category: string;
   image: string;
-  rating: number;
   stock: number;
 }
 
@@ -19,79 +43,106 @@ export interface Product {
   providedIn: 'root'
 })
 export class ProductService {
-  private apiUrl = 'http://localhost:9000';
+  private apiUrl = environment.apiUrl;
+  private useFirebase = true; // Set to true to use Firebase, false to use Medusa API
+  private cachedProducts: Product[] | null = null;
 
-  constructor(private http: HttpClient) {}
+  constructor(
+    private http: HttpClient,
+    private firebaseService: FirebaseService
+  ) {}
 
-  async getProducts(): Promise<Product[]> {
-    // For now, return mock data until Medusa backend is set up
-    return [
-      {
-        id: '1',
-        title: 'Gaming Laptop Pro',
-        description: 'High-performance gaming laptop with RTX 4080, 32GB RAM, and 1TB SSD.',
-        price: 1999.99,
-        salePrice: 1799.99,
-        onSale: true,
-        category: 'Laptops',
-        image: 'https://images.unsplash.com/photo-1603302576837-37561b2e2302?w=500',
-        rating: 4.8,
-        stock: 5
-      },
-      {
-        id: '2',
-        title: 'Mechanical Gaming Keyboard',
-        description: 'RGB mechanical keyboard with Cherry MX switches and customizable macros.',
-        price: 149.99,
-        category: 'Peripherals',
-        image: 'https://images.unsplash.com/photo-1511467687858-23d96c32e4ae?w=500',
-        rating: 4.7,
-        stock: 15
-      },
-      {
-        id: '3',
-        title: 'Gaming Mouse',
-        description: '16000 DPI gaming mouse with programmable buttons and RGB lighting.',
-        price: 79.99,
-        salePrice: 59.99,
-        onSale: true,
-        category: 'Peripherals',
-        image: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=500',
-        rating: 4.6,
-        stock: 20
-      },
-      {
-        id: '4',
-        title: '4K Gaming Monitor',
-        description: '27-inch 4K monitor with 144Hz refresh rate and 1ms response time.',
-        price: 599.99,
-        category: 'Monitors',
-        image: 'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=500',
-        rating: 4.9,
-        stock: 8
-      },
-      {
-        id: '5',
-        title: 'Gaming PC Desktop',
-        description: 'Custom gaming PC with RTX 4090, Ryzen 9, 64GB RAM, and 2TB NVMe SSD.',
-        price: 2999.99,
-        salePrice: 2799.99,
-        onSale: true,
-        category: 'Desktop PCs',
-        image: 'https://images.unsplash.com/photo-1587202372634-32705e3bf49c?w=500',
-        rating: 5.0,
-        stock: 3
-      },
-      {
-        id: '6',
-        title: 'Gaming Headset',
-        description: 'Wireless gaming headset with 7.1 surround sound and noise-canceling mic.',
-        price: 199.99,
-        category: 'Audio',
-        image: 'https://images.unsplash.com/photo-1618366712010-f4ae9c647dcb?w=500',
-        rating: 4.5,
-        stock: 12
+  async getProducts(forceRefresh: boolean = false): Promise<Product[]> {
+    // Return cached products if available and no force refresh is requested
+    if (this.cachedProducts && !forceRefresh) {
+      return this.cachedProducts;
+    }
+    
+    if (this.useFirebase) {
+      this.cachedProducts = await this.firebaseService.getProducts();
+      return this.cachedProducts;
+    }
+    
+    try {
+      const response = await firstValueFrom(
+        this.http.get<{ products: MedusaProduct[] }>(`${this.apiUrl}/products`)
+      );
+
+      this.cachedProducts = response.products.map(p => this.convertMedusaProduct(p));
+      return this.cachedProducts;
+    } catch (error) {
+      console.error('Error fetching products:', error);
+      return [];
+    }
+  }
+
+  async getProduct(id: string): Promise<Product | null> {
+    // Try to find in cache first
+    if (this.cachedProducts) {
+      const cachedProduct = this.cachedProducts.find(p => p.id === id);
+      if (cachedProduct) {
+        return cachedProduct;
       }
-    ];
+    }
+    
+    if (this.useFirebase) {
+      return this.firebaseService.getProduct(id);
+    }
+    
+    try {
+      const response = await firstValueFrom(
+        this.http.get<{ product: MedusaProduct }>(`${this.apiUrl}/products/${id}`)
+      );
+
+      return this.convertMedusaProduct(response.product);
+    } catch (error) {
+      console.error(`Error fetching product ${id}:`, error);
+      return null;
+    }
+  }
+
+  async addProduct(product: Omit<Product, 'id'>): Promise<string | null> {
+    if (this.useFirebase) {
+      const newId = await this.firebaseService.addProduct(product);
+      // Invalidate cache to force refresh on next getProducts call
+      this.cachedProducts = null;
+      return newId;
+    }
+    return null; // Not implemented for Medusa API in this example
+  }
+
+  async updateProduct(id: string, product: Partial<Product>): Promise<boolean> {
+    if (this.useFirebase) {
+      const success = await this.firebaseService.updateProduct(id, product);
+      // Invalidate cache to force refresh on next getProducts call
+      this.cachedProducts = null;
+      return success;
+    }
+    return false; // Not implemented for Medusa API in this example
+  }
+
+  async deleteProduct(id: string): Promise<boolean> {
+    if (this.useFirebase) {
+      const success = await this.firebaseService.deleteProduct(id);
+      // Invalidate cache to force refresh on next getProducts call
+      this.cachedProducts = null;
+      return success;
+    }
+    return false; // Not implemented for Medusa API in this example
+  }
+
+  private convertMedusaProduct(medusaProduct: MedusaProduct): Product {
+    const defaultVariant = medusaProduct.variants[0];
+    const defaultPrice = defaultVariant?.prices[0]?.amount || 0;
+    
+    return {
+      id: medusaProduct.id,
+      title: medusaProduct.title,
+      description: medusaProduct.description,
+      price: defaultPrice / 100, // Medusa stores prices in cents
+      category: medusaProduct.categories?.[0]?.name || 'Uncategorized',
+      image: medusaProduct.thumbnail || '',
+      stock: defaultVariant?.inventory_quantity || 0
+    };
   }
 }

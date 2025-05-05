@@ -1,0 +1,47 @@
+<div class="container my-5">
+  <h2 class="mb-4">Your Cart</h2>
+  <div *ngIf="cart.length === 0" class="alert alert-info">
+    Your cart is empty.
+  </div>
+  <div *ngIf="cart.length > 0" class="cart-menu">
+    <div class="cart-title">Your Cart</div>
+    <div class="cart-items">
+      <div *ngFor="let item of cart" class="cart-item">
+        <img [src]="item.image || 'assets/images/placeholder.png'" class="item-img" alt="{{ item.title }}">
+        <div class="item-info">
+          <div class="item-title">{{ item.title }}</div>
+          <div class="item-qty">Qty: 
+            <input type="number" min="1" [value]="item.quantity" (change)="onQuantityChange($event, item)" class="form-control form-control-sm" style="width: 60px; display: inline-block; margin-left: 4px;">
+          </div>
+        </div>
+        <div class="item-price">${{ (item.price * item.quantity).toFixed(2) }}</div>
+        <button class="btn btn-danger btn-sm" (click)="removeFromCart(item)">Remove</button>
+      </div>
+    </div>
+    <div class="cart-summary">
+      <span>Total:</span>
+      <span>${{ total.toFixed(2) }}</span>
+    </div>
+    <button class="checkout-btn">Proceed to Checkout</button>
+    <div class="d-flex gap-2 mt-2">
+      <button class="btn btn-outline-danger" (click)="clearCart()">Clear Cart</button>
+      <button class="btn btn-success" *ngIf="cart.length > 0 && !showValidationForm" (click)="validatePurchase()">Validate Purchase</button>
+    </div>
+
+    <div *ngIf="showValidationForm" class="validation-form mt-3 p-3 border rounded bg-light">
+      <h5>Validate Purchase</h5>
+      <div class="mb-2">
+        <label for="fullName">Full Name</label>
+        <textarea id="fullName" class="form-control" [(ngModel)]="fullName" rows="1" placeholder="Enter your full name"></textarea>
+      </div>
+      <div class="mb-2">
+        <label for="phoneNumber">Phone Number</label>
+        <textarea id="phoneNumber" class="form-control" [(ngModel)]="phoneNumber" rows="1" placeholder="Enter your phone number"></textarea>
+      </div>
+      <div *ngIf="submitError" class="alert alert-danger">{{ submitError }}</div>
+      <div *ngIf="submitSuccess" class="alert alert-success">Purchase saved successfully!</div>
+      <button class="btn btn-primary me-2" [disabled]="isSubmitting" (click)="confirmPurchase()">Confirm</button>
+      <button class="btn btn-secondary" [disabled]="isSubmitting" (click)="cancelValidation()">Cancel</button>
+    </div>
+  </div>
+</div>

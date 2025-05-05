@@ -1,26 +1,31 @@
 import { Routes } from '@angular/router';
-import { ProductsComponent } from './components/products/products.component';
-import { HomeComponent } from './components/home/home.component';
-import { LoginComponent } from './pages/login/login.component';
-import { AdminComponent } from './pages/admin/admin.component';
 import { authGuard } from './guards/auth.guard';
+import { adminGuard } from './guards/admin.guard';
 
 export const routes: Routes = [
   {
     path: '',
-    component: HomeComponent
+    loadComponent: () => import('./pages/home/home.component').then(m => m.HomeComponent)
+  },
+  {
+    path: 'administrator',
+    loadComponent: () => import('./pages/login/login.component').then(m => m.LoginComponent)
   },
   {
     path: 'products',
-    component: ProductsComponent
+    loadComponent: () => import('./pages/products/products.component').then(m => m.ProductsComponent)
   },
   {
-    path: 'login',
-    component: LoginComponent
+    path: 'cart',
+    loadComponent: () => import('./pages/cart/cart.component').then(m => m.CartComponent)
   },
   {
     path: 'admin',
-    component: AdminComponent,
-    canActivate: [authGuard]
+    loadComponent: () => import('./pages/admin/admin.component').then(m => m.AdminComponent),
+    canActivate: [adminGuard]
+  },
+  {
+    path: '**',
+    redirectTo: ''
   }
 ];

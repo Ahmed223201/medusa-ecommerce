@@ -1,0 +1,262 @@
+/* CART COMPONENT STYLES */
+.container.my-5 {
+  padding: 2.5rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  background: rgba(255,255,255,0.97);
+  border-radius: 1rem;
+  box-shadow: 0 4px 24px rgba(99,102,241,0.10);
+  font-size: 1.3rem;
+  letter-spacing: 0.02em;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 80vh;
+}
+
+.cart-menu {
+  position: static;
+  margin: 0 auto;
+  left: 0;
+  right: 0;
+  top: unset;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  align-items: center;
+  width: 100%;
+  max-width: 540px;
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(99,102,241,0.18);
+  padding: 2rem 2.2rem;
+}
+
+.cart-title {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+}
+
+.cart-items {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.6rem;
+}
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.2rem 0;
+  justify-content: center;
+  width: 100%;
+}
+
+.cart-menu .item-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 0.8rem;
+  object-fit: cover;
+  background: #f3f4f6;
+  margin-right: 1.2rem;
+}
+
+.item-title {
+  font-size: 1.25rem;
+}
+
+.item-qty, .item-price {
+  font-size: 1.15rem;
+}
+
+.cart-summary {
+  font-size: 1.3rem;
+  margin-bottom: 1.7rem;
+}
+
+.checkout-btn {
+  font-size: 1.2rem;
+  padding: 1.1rem 0;
+}
+
+.btn-outline-danger, .btn-danger {
+  font-size: 1.1rem;
+  padding: 0.7rem 1.3rem;
+}
+
+.form-control, .form-control-sm {
+  font-size: 1.1rem;
+  padding: 0.5rem 0.75rem;
+}
+
+.cart-menu .empty-cart {
+  font-size: 1.2rem;
+}
+
+.cart-menu, .cart-title, .cart-items, .cart-item, .item-info, .item-title, .item-qty, .item-price, .cart-summary, .checkout-btn, .btn-outline-danger, .btn-danger {
+  font-size: 1.15em;
+}
+
+.cart-menu {
+  position: static;
+  margin: 0 auto;
+  left: 0;
+  right: 0;
+  top: unset;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+  align-items: center;
+  width: 100%;
+  max-width: 540px;
+  background: #fff;
+  border-radius: 1rem;
+  box-shadow: 0 8px 32px rgba(99,102,241,0.18);
+  padding: 2rem 2.2rem;
+}
+
+.cart-title {
+  font-size: 2rem;
+  margin-bottom: 2rem;
+}
+
+.cart-items {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.6rem;
+}
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+  padding: 1.2rem 0;
+  justify-content: center;
+  width: 100%;
+}
+
+.item-title {
+  font-size: 1.25rem;
+}
+
+.item-qty, .item-price {
+  font-size: 1.15rem;
+}
+
+.cart-summary {
+  font-size: 1.3rem;
+  margin-bottom: 1.7rem;
+}
+
+.checkout-btn {
+  font-size: 1.2rem;
+  padding: 1.1rem 0;
+}
+
+.btn-outline-danger, .btn-danger {
+  font-size: 1.1rem;
+  padding: 0.7rem 1.3rem;
+}
+
+.form-control {
+  padding: 0.5rem 0.75rem;
+  border: 1.5px solid #6366f1;
+  border-radius: 0.5rem;
+  font-size: 1.1rem;
+  transition: border 0.2s;
+}
+
+.form-control:focus {
+  border-color: #f59e42;
+  outline: none;
+}
+
+.alert-info {
+  background: #6366f1;
+  color: #fff;
+  padding: 0.75rem 1rem;
+  border-radius: 0.5rem;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+
+.cart-menu .empty-cart {
+  font-size: 1.2rem;
+}
+
+.cart-menu .item-img {
+  width: 80px;
+  height: 80px;
+  border-radius: 0.8rem;
+  object-fit: cover;
+  background: #f3f4f6;
+  margin-right: 1.2rem;
+}
+
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+  width: 100%;
+  background: #fff;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 2px 12px rgba(99,102,241,0.07);
+}
+
+.table th, .table td {
+  border: none;
+  padding: 1.2rem 0.9rem;
+  text-align: left;
+  font-size: 1.1rem;
+}
+
+.table th {
+  background: #6366f1;
+  color: #fff;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.table tr:nth-child(even) {
+  background: #f3f4f6;
+}
+
+.btn {
+  padding: 0.7rem 1.3rem;
+  border: none;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1.1rem;
+  transition: background 0.2s, transform 0.2s;
+  box-shadow: 0 2px 8px rgba(99,102,241,0.07);
+}
+
+.btn-danger {
+  background: #f43f5e;
+  color: #fff;
+}
+
+.btn-danger:hover {
+  background: #be123c;
+  transform: scale(1.05);
+}
+
+.btn-outline-danger:hover {
+  background: #f3f4f6;
+  color: #be123c;
+}
+
+@media (max-width: 700px) {
+  .table th, .table td {
+    padding: 0.5rem;
+    font-size: 1rem;
+  }
+}

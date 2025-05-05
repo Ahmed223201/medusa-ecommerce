@@ -1,356 +1,185 @@
 import { Component } from '@angular/core';
+import { RouterOutlet, RouterModule } from '@angular/router';
 import { CommonModule } from '@angular/common';
-import { RouterOutlet, RouterLink, RouterLinkActive } from '@angular/router';
-import { FormsModule } from '@angular/forms';
-import { CartComponent } from './components/cart/cart.component';
-import { CartService } from './services/cart.service';
 import { AuthService } from './services/auth.service';
+import { CartService } from './services/cart.service';
+import { NotificationService } from './services/notification.service';
+import { NotificationComponent } from './components/notification/notification.component';
 
 @Component({
   selector: 'app-root',
   standalone: true,
-  imports: [CommonModule, RouterOutlet, RouterLink, RouterLinkActive, FormsModule, CartComponent],
-  template: `
-    <div class="app-container">
-      <header class="header">
-        <div class="logo">E-Commerce Store</div>
-        <div class="search-bar">
-          <input 
-            type="text" 
-            [(ngModel)]="searchQuery" 
-            (keyup.enter)="onSearch()"
-            placeholder="Search products..." 
-            class="search-input">
-          <button class="search-button" (click)="onSearch()">
-            <i class="fas fa-search"></i>
-          </button>
-        </div>
-        <div class="nav-links">
-          <div class="cart" (click)="toggleCart()">
-            <i class="fas fa-shopping-cart"></i>
-            <span class="cart-text">Cart ({{ cartService.getItemCount() }})</span>
-            <div class="cart-badge" *ngIf="cartService.getItemCount() > 0">
-              {{ cartService.getItemCount() }}
-            </div>
-          </div>
-          <ng-container *ngIf="!authService.isLoggedIn(); else loggedIn">
-            <a routerLink="/login" class="nav-link">
-              <i class="fas fa-user"></i>
-              Login
-            </a>
-          </ng-container>
-          <ng-template #loggedIn>
-            <a routerLink="/admin" class="nav-link">
-              <i class="fas fa-cog"></i>
-              Admin
-            </a>
-            <button class="nav-link" (click)="logout()">
-              <i class="fas fa-sign-out-alt"></i>
-              Logout
-            </button>
-          </ng-template>
-        </div>
-      </header>
-
-      <nav class="navbar">
-        <div>
-          <a routerLink="/" class="nav-link" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">Home</a>
-          <a routerLink="/products" class="nav-link" routerLinkActive="active">Products</a>
-        </div>
-      </nav>
-
-      <main>
-        <router-outlet></router-outlet>
-      </main>
-
-      <footer class="footer">
-        <div class="footer-content">
-          <p>&copy; 2025 E-Commerce Store. All rights reserved.</p>
-        </div>
-      </footer>
-
-      <div class="modal-overlay" *ngIf="showCart" (click)="closeCart()">
-        <div class="modal-content" (click)="$event.stopPropagation()">
-          <app-cart (close)="closeCart()"></app-cart>
-        </div>
-      </div>
-    </div>
-  `,
+  imports: [RouterOutlet, CommonModule, RouterModule, NotificationComponent],
+  template: '<div class="app-container">' +
+    '<app-notification></app-notification>' +
+    '<nav class="navbar">' +
+      '<div class="nav-left">' +
+        '<a routerLink="/" class="logo">Medusa Store</a>' +
+        '<div class="nav-links">' +
+          '<a routerLink="/products" class="nav-link">Products</a>' +
+          '<a routerLink="/cart" class="nav-link">Cart</a>' +
+        '</div>' +
+      '</div>' +
+      '<div class="nav-right">' +
+        '<ng-container *ngIf="(authService.isAuthenticated$ | async) && (authService.currentUser$ | async)?.isAdmin">' +
+          '<a routerLink="/admin" class="nav-link admin-link">Administrator Panel</a>' +
+          '<button class="logout-btn" (click)="authService.logout()">Logout</button>' +
+        '</ng-container>' +
+        '<ng-container *ngIf="!(authService.isAuthenticated$ | async) || !(authService.currentUser$ | async)?.isAdmin">' +
+          '<a routerLink="/administrator" class="nav-link">Administrator Login</a>' +
+        '</ng-container>' +
+      '</div>' +
+    '</nav>' +
+    '<main>' +
+      '<router-outlet></router-outlet>' +
+    '</main>' +
+  '</div>',
   styles: [`
     .app-container {
       min-height: 100vh;
+      background-color: #f8f9fa;
+    }
+
+    .navbar {
       display: flex;
-      flex-direction: column;
-    }
-
-    .header {
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 2rem;
       background: white;
-      padding: 1rem;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-      position: sticky;
-      top: 0;
-      z-index: 1000;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
-    .header > div {
-      max-width: 1200px;
-      margin: 0 auto;
+    .nav-left {
       display: flex;
       align-items: center;
-      justify-content: space-between;
       gap: 2rem;
-    }
-
-    .logo {
-      font-size: 1.5rem;
-      font-weight: bold;
-      color: var(--primary-color);
-      cursor: pointer;
-      transition: color 0.2s;
-    }
-
-    .logo:hover {
-      color: var(--primary-hover);
-    }
-
-    .search-bar {
-      flex: 1;
-      max-width: 600px;
-      display: flex;
-      position: relative;
-    }
-
-    .search-input {
-      width: 100%;
-      padding: 0.75rem 1rem;
-      padding-right: 3rem;
-      border: 2px solid var(--border-color);
-      border-radius: var(--border-radius);
-      font-size: 1rem;
-      transition: border-color 0.2s;
-    }
-
-    .search-input:focus {
-      outline: none;
-      border-color: var(--primary-color);
-    }
-
-    .search-button {
-      position: absolute;
-      right: 0;
-      top: 0;
-      bottom: 0;
-      width: 3rem;
-      border: none;
-      background: none;
-      color: var(--text-light);
-      cursor: pointer;
-      transition: color 0.2s;
-    }
-
-    .search-button:hover {
-      color: var(--primary-color);
     }
 
     .nav-links {
       display: flex;
+      gap: 1rem;
+    }
+
+    .logo {
+      color: #333;
+      text-decoration: none;
+      font-size: 1.25rem;
+      font-weight: bold;
+      transition: color 0.2s;
+    }
+
+    .logo:hover {
+      color: #007bff;
+    }
+
+    .nav-right {
+      display: flex;
       align-items: center;
-      gap: 1.5rem;
+      gap: 1rem;
     }
 
     .nav-link {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: var(--text-color);
+      color: #666;
       text-decoration: none;
-      font-weight: 500;
-      transition: color 0.2s;
-      background: none;
-      border: none;
-      padding: 0;
-      cursor: pointer;
-      font-size: 1rem;
-    }
-
-    .nav-link:hover {
-      color: var(--primary-color);
-    }
-
-    .nav-link i {
-      font-size: 1.2rem;
-    }
-
-    .cart {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      cursor: pointer;
-      position: relative;
-      padding: 0.5rem;
-      border-radius: var(--border-radius);
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
       transition: background-color 0.2s;
     }
 
-    .cart:hover {
-      background-color: var(--background-color);
+    .nav-link:hover {
+      background: #f0f0f0;
+      color: #333;
     }
 
-    .cart i {
-      font-size: 1.2rem;
-      color: var(--primary-color);
+    .cart-btn {
+      position: relative;
+      color: #666;
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
     }
 
-    .cart-text {
-      color: var(--text-color);
-    }
-
-    .cart-badge {
+    .cart-count {
       position: absolute;
       top: -5px;
       right: -5px;
-      background: var(--error-color);
+      background: #dc3545;
       color: white;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
       font-size: 0.75rem;
-      font-weight: bold;
-    }
-
-    .navbar {
-      background: var(--background-color);
-      padding: 1rem;
-      border-bottom: 1px solid var(--border-color);
-    }
-
-    .navbar > div {
-      max-width: 1200px;
-      margin: 0 auto;
-      display: flex;
-      gap: 2rem;
-    }
-
-    .navbar .nav-link {
-      padding: 0.5rem 0;
-      position: relative;
-    }
-
-    .navbar .nav-link::after {
-      content: '';
-      position: absolute;
-      bottom: 0;
-      left: 0;
-      width: 100%;
-      height: 2px;
-      background-color: var(--primary-color);
-      transform: scaleX(0);
-      transition: transform 0.2s;
-    }
-
-    .navbar .nav-link:hover::after,
-    .navbar .nav-link.active::after {
-      transform: scaleX(1);
-    }
-
-    main {
-      flex: 1;
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 2rem;
-      width: 100%;
-    }
-
-    .footer {
-      background: var(--background-color);
-      padding: 2rem;
-      margin-top: auto;
-      border-top: 1px solid var(--border-color);
-    }
-
-    .footer-content {
-      max-width: 1200px;
-      margin: 0 auto;
+      padding: 0.25rem 0.5rem;
+      border-radius: 1rem;
+      min-width: 1.5rem;
       text-align: center;
-      color: var(--text-light);
     }
 
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.5);
+    .user-info {
       display: flex;
       align-items: center;
-      justify-content: center;
-      z-index: 1100;
-      padding: 1rem;
+      gap: 1rem;
     }
 
-    .modal-content {
-      width: 100%;
-      max-width: 600px;
-      animation: slideIn 0.3s ease-out;
+    .admin-link {
+      background: #28a745;
+      color: white !important;
+      text-decoration: none;
+      padding: 0.5rem 1rem;
+      border-radius: 4px;
+      transition: background-color 0.2s;
     }
 
-    @keyframes slideIn {
-      from {
-        transform: translateY(-20px);
-        opacity: 0;
-      }
-      to {
-        transform: translateY(0);
-        opacity: 1;
-      }
+    .admin-link:hover {
+      background: #218838;
+    }
+
+    .logout-btn {
+      background: none;
+      border: none;
+      color: #dc3545;
+      cursor: pointer;
+      padding: 0.5rem;
+      font-size: 0.875rem;
+    }
+
+    .logout-btn:hover {
+      text-decoration: underline;
     }
 
     @media (max-width: 768px) {
-      .header > div {
+      .navbar {
+        padding: 1rem;
         flex-direction: column;
         gap: 1rem;
       }
 
-      .search-bar {
+      .nav-left {
+        flex-direction: column;
+        align-items: center;
+        gap: 1rem;
         width: 100%;
       }
 
       .nav-links {
         width: 100%;
-        justify-content: space-between;
+        justify-content: center;
+      }
+
+      .nav-right {
+        width: 100%;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .user-info {
+        flex-direction: column;
+        align-items: center;
       }
     }
   `]
 })
 export class AppComponent {
-  searchQuery: string = '';
-  showCart = false;
-
   constructor(
+    public authService: AuthService,
     public cartService: CartService,
-    public authService: AuthService
+    public notificationService: NotificationService
   ) {}
-
-  onSearch() {
-    if (this.searchQuery.trim()) {
-      // Implement search functionality
-      console.log('Searching for:', this.searchQuery);
-    }
-  }
-
-  toggleCart() {
-    this.showCart = !this.showCart;
-  }
-
-  closeCart() {
-    this.showCart = false;
-  }
-
-  logout() {
-    this.authService.logout();
-  }
 }

@@ -1,0 +1,26 @@
+<div class="products-container">
+  <h2>Our Products</h2>
+  <div class="products-grid">
+    <div *ngFor="let product of filteredProducts" class="product-card">
+      <img [src]="product.image || '/assets/placeholder.png'" [alt]="product.title">
+      <div class="product-info">
+        <h3>{{ product.title }}</h3>
+        <p class="description">{{ product.description }}</p>
+        <div class="price-stock">
+          <div class="price">
+            <span>${{ product.price.toFixed(2) }}</span>
+          </div>
+          <div class="stock" [class.low-stock]="product.stock < 5">
+            {{ product.stock }} in stock
+          </div>
+        </div>
+        <button 
+          (click)="addToCart(product)"
+          [disabled]="product.stock === 0"
+          class="add-to-cart">
+          {{ product.stock === 0 ? 'Out of Stock' : 'Add to Cart' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

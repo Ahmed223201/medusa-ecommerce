@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
+import { Product } from './product.service';
 
-export interface CartItem {
+export interface LocalCartItem {
   id: string;
   title: string;
   price: number;
@@ -13,61 +14,63 @@ export interface CartItem {
   providedIn: 'root'
 })
 export class CartService {
-  private items: CartItem[] = [];
-  private cartItemsSubject = new BehaviorSubject<CartItem[]>([]);
-  cartItems$ = this.cartItemsSubject.asObservable();
+  private cartKey = 'localCart';
+  private cartSubject = new BehaviorSubject<LocalCartItem[]>(this.loadCart());
+  cart$ = this.cartSubject.asObservable();
 
-  constructor() {
-    // Load cart from localStorage if exists
-    const savedCart = localStorage.getItem('cart');
-    if (savedCart) {
-      this.items = JSON.parse(savedCart);
-      this.cartItemsSubject.next(this.items);
-    }
+  constructor() {}
+
+  private loadCart(): LocalCartItem[] {
+    const data = localStorage.getItem(this.cartKey);
+    return data ? JSON.parse(data) : [];
   }
 
-  private saveCart() {
-    localStorage.setItem('cart', JSON.stringify(this.items));
-    this.cartItemsSubject.next(this.items);
+  private saveCart(cart: LocalCartItem[]) {
+    localStorage.setItem(this.cartKey, JSON.stringify(cart));
+    this.cartSubject.next(cart);
   }
 
-  addItem(item: Pick<CartItem, 'id' | 'title' | 'price' | 'image'>) {
-    const existingItem = this.items.find(i => i.id === item.id);
-    if (existingItem) {
-      existingItem.quantity += 1;
+  addToCart(product: Product) {
+    const cart = this.loadCart();
+    const index = cart.findIndex(item => item.id === product.id);
+    if (index > -1) {
+      cart[index].quantity += 1;
     } else {
-      this.items.push({ ...item, quantity: 1 });
+      cart.push({
+        id: product.id,
+        title: product.title,
+        price: product.price,
+        quantity: 1,
+        image: product.image
+      });
     }
-    this.saveCart();
+    this.saveCart(cart);
   }
 
-  removeItem(itemId: string) {
-    this.items = this.items.filter(item => item.id !== itemId);
-    this.saveCart();
-  }
-
-  updateQuantity(itemId: string, quantity: number) {
-    const item = this.items.find(i => i.id === itemId);
-    if (item) {
-      item.quantity = Math.max(0, quantity);
-      if (item.quantity === 0) {
-        this.removeItem(itemId);
-      } else {
-        this.saveCart();
-      }
-    }
+  removeFromCart(productId: string) {
+    let cart = this.loadCart();
+    cart = cart.filter(item => item.id !== productId);
+    this.saveCart(cart);
   }
 
   clearCart() {
-    this.items = [];
-    this.saveCart();
+    this.saveCart([]);
+  }
+
+  updateQuantity(productId: string, quantity: number) {
+    const cart = this.loadCart();
+    const index = cart.findIndex(item => item.id === productId);
+    if (index > -1) {
+      cart[index].quantity = quantity;
+      if (cart[index].quantity <= 0) {
+        cart.splice(index, 1);
+      }
+      this.saveCart(cart);
+    }
   }
 
   getTotal(): number {
-    return this.items.reduce((total, item) => total + (item.price * item.quantity), 0);
-  }
-
-  getItemCount(): number {
-    return this.items.reduce((count, item) => count + item.quantity, 0);
+    const cart = this.loadCart();
+    return cart.reduce((acc, item) => acc + item.price * item.quantity, 0);
   }
 }

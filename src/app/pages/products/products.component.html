@@ -1,8 +1,81 @@
-<h2>Our Products</h2>
-<div class="products">
-  <div class="product-card" *ngFor="let product of products">
-    <img [src]="product.image" alt="{{ product.name }}">
-    <h3>{{ product.name }}</h3>
-    <p>{{ product.price }} TND</p>
+<div class="products-container">
+  <h2 class="mb-4">Our Products</h2>
+  
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
+    </div>
   </div>
+
+  <div *ngIf="error" class="alert alert-danger">
+    Failed to load products. Please try again later.
+  </div>
+
+  <!-- ADMIN PRODUCT LIST (replaces regular view for admins) -->
+  <div *ngIf="isAdmin; else regularProducts" class="admin-product-list">
+    <h2>Products (Admin View)</h2>
+    <button (click)="loadProducts()" class="refresh-btn">Refresh Products</button>
+    <div *ngIf="loading" class="loading">
+      <div class="spinner"></div>
+      <p>Loading products...</p>
+    </div>
+    <div *ngIf="!loading && products.length === 0" class="no-products">
+      <p>No products found. Add your first product using the admin dashboard.</p>
+    </div>
+    <table *ngIf="!loading && products.length > 0" class="product-table">
+      <thead>
+        <tr>
+          <th>Image</th>
+          <th>Title</th>
+          <th>Description</th>
+          <th>Price</th>
+          <th>Category</th>
+          <th>Stock</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr *ngFor="let product of products">
+          <td><img [src]="product.image || 'assets/images/placeholder.png'" width="60" /></td>
+          <td>{{ product.title }}</td>
+          <td>{{ product.description }}</td>
+          <td>${{ product.price.toFixed(2) }}</td>
+          <td>{{ product.category }}</td>
+          <td>{{ product.stock }}</td>
+          <td>
+            <button (click)="editProduct(product)" class="btn btn-primary btn-sm me-2">Edit</button>
+            <button (click)="deleteProduct(product.id)" class="btn btn-danger btn-sm">Delete</button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <ng-template #regularProducts>
+    <div *ngIf="!loading && !error" class="products-grid">
+      <div *ngFor="let product of products" class="product-card">
+        <img [src]="product.image || 'assets/images/placeholder.png'" 
+             [alt]="product.title"
+             onerror="this.src='assets/images/placeholder.png'">
+        <div class="product-info">
+          <h3 class="product-title">{{ product.title }}</h3>
+          <p class="description">{{ truncateDescription(product.description) }}</p>
+          <div class="price-stock">
+            <div class="price">
+              <span>${{ product.price.toFixed(2) }}</span>
+            </div>
+          </div>
+          <button 
+            (click)="addToCart(product)"
+            class="add-to-cart">
+            Add to Cart
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div *ngIf="!loading && !error && products.length === 0" class="text-center py-5">
+      <p>No products available at the moment.</p>
+    </div>
+  </ng-template>
 </div>

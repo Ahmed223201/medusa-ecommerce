@@ -1,14 +1,48 @@
-<div class="container">
-    <div class="row">
-      <div class="col-md-6">
-        <img [src]="product.image" class="img-fluid" alt="{{ product.name }}">
-      </div>
-      <div class="col-md-6">
-        <h2>{{ product.name }}</h2>
-        <p>{{ product.description }}</p>
-        <h3>${{ product.price }}</h3>
-        <button class="btn btn-success" (click)="addToCart()">Add to Cart</button>
-      </div>
+<div class="container my-5">
+  <div *ngIf="loading" class="text-center py-5">
+    <div class="spinner-border" role="status">
+      <span class="visually-hidden">Loading...</span>
     </div>
   </div>
-  
+
+  <div *ngIf="error" class="alert alert-danger">
+    Failed to load product details. Please try again later.
+  </div>
+
+  <div *ngIf="!loading && !error && product" class="row">
+    <div class="col-md-6">
+      <img [src]="product.image || 'assets/images/placeholder.png'" class="img-fluid rounded" 
+           alt="{{ product.title }}" onerror="this.src='assets/images/placeholder.png'">
+    </div>
+    <div class="col-md-6">
+      <h2 class="mb-3">{{ product.title }}</h2>
+      <p class="text-muted mb-4">{{ product.description }}</p>
+      
+      <div class="mb-4">
+        <h3 class="mb-2">${{ product.price.toFixed(2) }}</h3>
+        <p *ngIf="product.stock > 0" class="text-success">In Stock ({{ product.stock }} available)</p>
+        <p *ngIf="product.stock <= 0" class="text-danger">Out of Stock</p>
+      </div>
+      
+      <div class="mb-4">
+        <label class="form-label">Quantity:</label>
+        <div class="input-group" style="max-width: 150px;">
+          <button class="btn btn-outline-secondary" type="button" 
+                  [disabled]="quantity <= 1"
+                  (click)="updateQuantity(-1)">-</button>
+          <span class="form-control text-center">{{ quantity }}</span>
+          <button class="btn btn-outline-secondary" type="button" 
+                  (click)="updateQuantity(1)">+</button>
+        </div>
+      </div>
+      
+      <button class="btn btn-primary btn-lg" 
+              [disabled]="product.stock <= 0"
+              (click)="addToCart()">
+        Add to Cart
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- The notification component is now managed by the app.component -->

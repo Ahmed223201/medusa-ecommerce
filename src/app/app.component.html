@@ -1,21 +1,36 @@
-<header class="header">
-  <div class="logo">Site E-Commerce</div>
-  <input type="text" placeholder="Search for products..." class="search-bar">
-  <div class="cart">🛒 <a routerLink="/cart">Cart</a></div>
-</header>
-
-<nav class="navbar">
-  <a routerLink="/home">Home</a>
-  <a routerLink="/products">Products</a>
-  <a routerLink="/products/1">Product Details</a>
-  <a routerLink="/cart">Cart</a>
-  
-</nav>
-
-<main>
-  <router-outlet></router-outlet>
-</main>
-
-<footer class="footer">
-  &copy; 2025 Site E-Commerce - All rights reserved.
-</footer>
+<div class="app-container">
+  <header>
+    <nav>
+      <div class="nav-left">
+        <a routerLink="/" class="logo">Admin Dashboard</a>
+      </div>
+      <div class="nav-right">
+        <ng-container *ngIf="(authService.isAuthenticated$ | async); else loginLink">
+          <ng-container *ngIf="(authService.currentUser$ | async) as user">
+            <a routerLink="/admin" class="nav-link">
+              <i class="fas fa-cog"></i>
+              Admin Panel
+            </a>
+            <span class="user-info">
+              <i class="fas fa-user"></i>
+              {{ user.username }}
+            </span>
+          </ng-container>
+          <button class="logout-btn" (click)="logout()">
+            <i class="fas fa-sign-out-alt"></i>
+            Logout
+          </button>
+        </ng-container>
+        <ng-template #loginLink>
+          <a routerLink="/login" class="nav-link">
+            <i class="fas fa-sign-in-alt"></i>
+            Admin Login
+          </a>
+        </ng-template>
+      </div>
+    </nav>
+  </header>
+  <main>
+    <router-outlet></router-outlet>
+  </main>
+</div>
